@@ -24,6 +24,8 @@ const userSchema = new Schema({
     picture: { type: String, default: "" },
     followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
     followings: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    followersCount: { type: Number, default: 0 },
+    followingsCount: { type: Number, default: 0 },
     isAdmin: { type: Boolean, default: false }
 }, { timestamps: true });
 

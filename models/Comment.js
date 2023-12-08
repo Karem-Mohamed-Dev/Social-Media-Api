@@ -1,6 +1,6 @@
 const { Schema, model } = require("mongoose");
 
-const postSchema = new Schema({
+const commentSchema = new Schema({
     content: { type: String, required: [true, "Comment content is required"] },
     parentId: { type: Schema.Types.ObjectId, required: [true, "Parent id is required"] },
     likes: { type: Number, default: 0 },
@@ -8,4 +8,4 @@ const postSchema = new Schema({
     replays: { type: Boolean, default: false }
 }, { timestamps: true });
 
-module.exports = model("Post", postSchema);
+module.exports = model("Comment", commentSchema);
