@@ -149,6 +149,44 @@ exports.unfollow = async (req, res, next) => {
     }
 }
 
+// Get Followers
+exports.getFollowers = async (req, res, next) => {
+    const { userId } = req.params
+    const group = +req.query.group || 1;
+    const limit = 10;
+
+    try {
+        const user = await User.findById(userId)
+            .select("followers")
+            .slice("followers", [(group - 1) * limit, limit])
+            .populate("followers", ["_id", "name", "picture"]);
+
+        res.status(200).json(user.followers)
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+// Get Followings
+exports.getFollowings = async (req, res, next) => {
+    const { userId } = req.params
+    const group = +req.query.group || 1;
+    const limit = 10;
+
+    try {
+        const user = await User.findById(userId)
+            .select("followings")
+            .slice("followings", [(group - 1) * limit, limit])
+            .populate("followings", ["_id", "name", "picture"]);
+
+        res.status(200).json(user.followings)
+
+    } catch (error) {
+        next(error);
+    }
+}
+
 // Delete Profile
 exports.deleteAccount = async (req, res, next) => {
     const tokenData = req.user;
