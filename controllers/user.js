@@ -84,5 +84,71 @@ exports.updateUser = async (req, res, next) => {
 }
 
 // Follow 
+exports.follow = async (req, res, next) => {
+    const tokenData = req.user;
+    const { userId } = req.body;
+    if (!userId) next(errorModel(400, "User id is required"));
+
+    if(tokenData._id === userId) return next(errorModel(400, "You Can't follow yourself"));
+
+    try {
+        const currentUser = await User.findById(tokenData._id);
+        if (!currentUser) return next(errorModel(404, "No Current User found with this id"));
+
+        const targetUser = await User.findById(userId);
+        if (!targetUser) return next(errorModel(404, "Nor Target User found with this id"));
+
+        if(currentUser.followings.includes(userId)) return next(errorModel(400, "You already following him"))
+
+        currentUser.followings.push(userId);
+        targetUser.followers.push(tokenData._id);
+
+        currentUser.followingsCount += 1;
+        targetUser.followersCount += 1;
+
+        await currentUser.save();
+        await targetUser.save();
+
+        res.status(200).json({ msg: "Success" });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+// UnFollow 
+exports.unfollow = async (req, res, next) => {
+    const tokenData = req.user;
+    const { userId } = req.body;
+    if (!userId) next(errorModel(400, "User id is required"));
+
+    if(tokenData._id === userId) return next(errorModel(400, "You Can't Unfollow yourself"));
+
+    try {
+        const currentUser = await User.findById(tokenData._id);
+        if (!currentUser) return next(errorModel(404, "No Current User found with this id"));
+
+        const targetUser = await User.findById(userId);
+        if (!targetUser) return next(errorModel(404, "Nor Target User found with this id"));
+
+        if(!currentUser.followings.includes(userId)) return next(errorModel(400, "You aren't following him already"))
+
+        currentUser.followings.pull(userId);
+        targetUser.followers.pull(tokenData._id);
+
+        currentUser.followingsCount -= 1;
+        targetUser.followersCount -= 1;
+
+        await currentUser.save();
+        await targetUser.save();
+
+        res.status(200).json({ msg: "Success" });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+
 
 // Delete Profile
