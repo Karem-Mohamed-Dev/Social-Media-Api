@@ -71,11 +71,6 @@ exports.updateUser = async (req, res, next) => {
         }
     }
     const tokenData = req.user;
-    const query = {}
-    if (name) query.name = name;
-    if (email) query.email = email;
-    if (bio) query.bio = bio;
-    if (imageUrl) query.picture = imageUrl;
 
     try {
         const user = await User.findById(tokenData._id, userFilter);
@@ -83,7 +78,7 @@ exports.updateUser = async (req, res, next) => {
 
         user.name = name || user.name;
         user.email = email || user.email;
-        user.imageUrl = picture || user.picture;
+        user.picture = imageUrl || user.picture;
         user.bio = bio || user.bio;
 
         const updatedUser = await user.save();

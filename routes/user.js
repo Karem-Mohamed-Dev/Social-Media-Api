@@ -25,7 +25,7 @@ router.get("/:userId/followings", getFollowings)
 router.use(isAuth)
 
 // Update Profile
-router.post("/update", upload.single('image'), updateUser);
+router.put("/update", upload.single('image'), updateUser);
 
 // follow 
 router.post("/follow", follow);
