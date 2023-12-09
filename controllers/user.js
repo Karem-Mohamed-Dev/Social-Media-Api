@@ -11,6 +11,18 @@ cloudinary.config({
 
 
 // Search For User
+exports.search = async (req, res, next) => {
+    const { name } = req.query;
+    if(name.length < 3) return next(errorModel(400, "Atleast 3 charachters"))
+
+    try {
+        const users = await User.find({ name: { $regex: name, $options: "i" } }, ["_id", "name", "picture"]).limit(10);
+        res.status(200).json(users);
+
+    } catch (error) {
+        next(error);
+    }
+}
 
 
 

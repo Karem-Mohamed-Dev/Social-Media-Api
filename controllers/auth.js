@@ -12,7 +12,7 @@ const CreateToken = (_id, name) => {
 exports.login = async (req, res, next) => {
     const { email, password } = req.body;
 
-    if (!email || !password) return next(errorModel(401, "All fields are required"));
+    if (!email || !password) return next(errorModel(400, "All fields are required"));
     if (!isEmail(email)) return next(errorModel(400, "Please enter a valid email"));
     if (password.length < 6) return next(errorModel(400, "Password must be more than 6"));
 
@@ -37,7 +37,8 @@ exports.login = async (req, res, next) => {
 exports.register = async (req, res, next) => {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) return next(errorModel(401, "All fields are required"));
+    if (!name || !email || !password) return next(errorModel(400, "All fields are required"));
+    if (name.length < 3) return next(errorModel(400, "Name nust be atleast 3 charachters"));
     if (!isEmail(email)) return next(errorModel(400, "Please enter a valid email"));
     if (password.length < 6) return next(errorModel(400, "Password must be more than 6"));
 
