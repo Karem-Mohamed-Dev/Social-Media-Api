@@ -2,7 +2,7 @@ const router = require("express").Router();
 const upload = require("../utils/imageUploade");
 const { isAuth } = require("../utils/isAuth")
 
-const { getUser, getUserPosts, updateUser, follow, unfollow } = require('../controllers/user');
+const { getUser, getUserPosts, updateUser, follow, unfollow, deleteAccount } = require('../controllers/user');
 
 // Get Profile
 
@@ -24,6 +24,8 @@ router.post("/unfollow", unfollow);
 
 
 // Delete Profile
+router.delete("/delete", deleteAccount);
+
 // Search For User
 
 module.exports = router;
