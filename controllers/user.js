@@ -1,8 +1,18 @@
-// Search For User
-
 const User = require("../models/User");
 const { errorModel } = require("../utils/errorModel");
 const Post = require("../models/Post")
+const cloudinary = require("cloudinary").v2;
+
+cloudinary.config({
+    cloud_name: "dq1hhuawl",
+    api_key: process.env.CLOUD_API_KEY,
+    api_secret: process.env.CLOUD_API_SECRET
+})
+
+
+// Search For User
+
+
 
 // Get Profile
 exports.getUser = async (req, res, next) => {
@@ -35,24 +45,44 @@ exports.getUserPosts = async (req, res, next) => {
 
 // Update Profile
 exports.updateUser = async (req, res, next) => {
-    const {path} = req.file;
-    console.log(path)
-    res.status(200).json(path)
-    // const user = req.user;
-    // const { name, email, bio, picture } = req.body;
-    // const query = {}
-    // if(name) query.name = name;
-    // if(email) query.email = email;
-    // if(bio) query.bio = bio;
+    const userFilter = ["_id", "name", "email", "bio", "picture"];
 
-    // try {
-    //     const user = await User.findById(user._id);
-    //     if (!user) return next(errorModel(404, "User not found"));
+    const { name, email, bio } = req.body;
+    const picture = req.file ? req.file.path : null;
+    let imageUrl = null;
+    if (picture) {
+        try {
+            const result = await cloudinary.uploader.upload(picture, { folder: "user_picture" });
+            imageUrl = result.secure_url;
+        } catch (error) {
+            next(error)
+        }
+    }
+    const tokenData = req.user;
+    const query = {}
+    if (name) query.name = name;
+    if (email) query.email = email;
+    if (bio) query.bio = bio;
+    if (imageUrl) query.picture = imageUrl;
 
+    try {
+        const user = await User.findById(tokenData._id, userFilter);
+        if (!user) return next(errorModel(404, "User not found"));
 
-    // } catch (error) {
-    //     next(error);
-    // }
+        user.name = name || user.name;
+        user.email = email || user.email;
+        user.imageUrl = picture || user.picture;
+        user.bio = bio || user.bio;
+
+        const updatedUser = await user.save();
+
+        res.status(200).json(updatedUser);
+    } catch (error) {
+        next(error);
+    }
 
 }
+
+// Follow 
+
 // Delete Profile
