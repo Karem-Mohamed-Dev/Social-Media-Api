@@ -22,8 +22,7 @@ const fileFilter = (req, file, cb) => {
 
 }
 
-const limits = { fileSize: 1024 * 1024 * 2 }
 
-const upload = multer({ storage, fileFilter, limits });
+const upload = multer({ storage, fileFilter, limits: { fileSize: 1024 * 1024 * 2 } });
 
 module.exports = { cloudinary, upload }
