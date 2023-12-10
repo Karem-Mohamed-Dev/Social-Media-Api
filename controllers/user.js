@@ -1,8 +1,8 @@
 const User = require("../models/User");
 const { errorModel } = require("../utils/errorModel");
 const Post = require("../models/Post")
-const cloudinary = require("cloudinary").v2;
 const bcrypt = require("bcrypt");
+const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
     cloud_name: "dq1hhuawl",
@@ -42,28 +42,30 @@ exports.getUser = async (req, res, next) => {
 
 // Update Profile
 exports.updateUser = async (req, res, next) => {
-    const userFilter = ["_id", "name", "email", "bio", "picture"];
+    const userFilter = ["_id", "name", "email", "bio", "picture", "pictureId"];
 
     const { name, email, bio } = req.body;
+    const tokenData = req.user;
     const picture = req.file ? req.file.path : null;
     let imageUrl = null;
-    if (picture) {
-        try {
-            const result = await cloudinary.uploader.upload(picture, { folder: "user_picture" });
-            imageUrl = result.secure_url;
-        } catch (error) {
-            next(error)
-        }
-    }
-    const tokenData = req.user;
+    let imageId = "";
 
     try {
         const user = await User.findById(tokenData._id, userFilter);
         if (!user) return next(errorModel(404, "User not found"));
+        
+        if (picture) {
+            if (user.pictureId)  await cloudinary.uploader.destroy(user.pictureId)
+            const result = await cloudinary.uploader.upload(picture, { folder: "user_picture" });
+            console.log(result)
+            imageUrl = result.secure_url;
+            imageId = result.public_id
+        }
 
         user.name = name || user.name;
         user.email = email || user.email;
         user.picture = imageUrl || user.picture;
+        user.pictureId = imageId || user.pictureId;
         user.bio = bio || user.bio;
 
         const updatedUser = await user.save();
@@ -208,10 +210,10 @@ exports.ChangePass = async (req, res, next) => {
 
         const isValidPass = await bcrypt.compare(oldPass, user.password);
         if (!isValidPass) return next(errorModel(401, "Old password is wrong"));
-        
-       
+
+
         const isEqual = await bcrypt.compare(newPass, user.password);
-        if(isEqual) return next(errorModel(400, "New password and old password must be different"))
+        if (isEqual) return next(errorModel(400, "New password and old password must be different"))
 
         const hash = await bcrypt.hash(newPass, 10);
         user.password = hash;

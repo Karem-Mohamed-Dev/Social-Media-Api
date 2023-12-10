@@ -1,17 +1,21 @@
 const router = require("express").Router();
-const upload = require("../utils/imageUploade");
 const { isAuth } = require("../utils/isAuth")
 
-const { getUser, search, getUserPosts, updateUser, follow, unfollow, deleteAccount, getFollowers, getFollowings, ChangePass } = require('../controllers/user');
+const multer = require("multer");
+
+const storage = multer.diskStorage({
+    filename: (req, file, cb) => {
+        cb(null, file.originalname);
+    }
+})
+
+const { getUser, search, updateUser, follow, unfollow, deleteAccount, getFollowers, getFollowings, ChangePass } = require('../controllers/user');
 
 // Get Profile
 router.get('/profile/:userId', getUser);
 
 // User Search
 router.get('/search', search);
-
-// Get User Posts
-router.get('/posts/:userId', getUserPosts);
 
 // Get User Followers
 router.get("/:userId/followers", getFollowers)
@@ -25,7 +29,7 @@ router.get("/:userId/followings", getFollowings)
 router.use(isAuth)
 
 // Update Profile
-router.put("/update", upload.single('image'), updateUser);
+router.put("/update", multer({ storage }).single('image'), updateUser);
 
 // follow 
 router.post("/follow", follow);

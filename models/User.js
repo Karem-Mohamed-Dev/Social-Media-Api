@@ -23,6 +23,7 @@ const userSchema = new Schema({
     posts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
     saved: [{ type: Schema.Types.ObjectId, ref: "Post" }],
     picture: { type: String, default: "" },
+    pictureId: { type: String, default: "" },
     followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
     followings: [{ type: Schema.Types.ObjectId, ref: "User" }],
     followersCount: { type: Number, default: 0 },
