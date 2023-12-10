@@ -3,12 +3,15 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { errorModel } = require("../utils/errorModel")
 const { isEmail } = require("validator");
+const sendEmail = require('../utils/sendEmail')
+const { v4: uuidv4 } = require("uuid");
 
 const CreateToken = (_id, name) => {
     const token = jwt.sign({ _id, name }, process.env.SECRET, { expiresIn: "3d" });
     return token;
 }
 
+// Login
 exports.login = async (req, res, next) => {
     const { email, password } = req.body;
 
@@ -34,6 +37,7 @@ exports.login = async (req, res, next) => {
     }
 }
 
+// Register
 exports.register = async (req, res, next) => {
     const { name, email, password } = req.body;
 
@@ -57,5 +61,36 @@ exports.register = async (req, res, next) => {
     }
 }
 
-// Login
-// Register
+
+// Get Code
+exports.getCode = async (req, res, next) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) return next(errorModel(404, "User not found"));
+        user.resetPassCode = uuidv4();
+        await user.save();
+
+        await sendEmail(email, "Reset Password", `
+            <div>
+                <h1 style="text-align: center; font-size: 2rem'">Code to reset password</h1>
+                <p style="background-color: #EDEBD7; padding: 10px; border-radius: 4px width: fit-content">${user.resetPassCode}</p>
+            </div>
+        `);
+        res.status(200).json({ msg: `Email Sent To: ${email}` });
+    } catch (error) {
+        return next(500, "Something Went Wrong Please Try Again");
+    }
+
+}
+
+// Verify Code
+exports.verifyCode = async (req, res, next) => {
+
+}
+
+// Set New Code
+exports.setNewPass = async (req, res, next) => {
+
+}

@@ -16,10 +16,12 @@ app.use(morgan('common'));
 
 const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user");
+const postRouter = require("./routes/post");
 
 
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
+app.use("/api/post", postRouter);
 
 
 app.use((req, res, next) => {
