@@ -2,7 +2,7 @@ const router = require("express").Router();
 const upload = require("../utils/imageUploade");
 const { isAuth } = require("../utils/isAuth")
 
-const { getUser, search, getUserPosts, updateUser, follow, unfollow, deleteAccount, getFollowers, getFollowings } = require('../controllers/user');
+const { getUser, search, getUserPosts, updateUser, follow, unfollow, deleteAccount, getFollowers, getFollowings, ChangePass } = require('../controllers/user');
 
 // Get Profile
 router.get('/profile/:userId', getUser);
@@ -34,9 +34,12 @@ router.post("/follow", follow);
 router.post("/unfollow", unfollow);
 
 
-
 // Delete Profile
 router.delete("/delete", deleteAccount);
+
+
+// Change Password
+router.put("/change-pass", ChangePass)
 
 // Search For User
 

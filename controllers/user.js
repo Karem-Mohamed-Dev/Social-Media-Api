@@ -2,6 +2,7 @@ const User = require("../models/User");
 const { errorModel } = require("../utils/errorModel");
 const Post = require("../models/Post")
 const cloudinary = require("cloudinary").v2;
+const bcrypt = require("bcrypt");
 
 cloudinary.config({
     cloud_name: "dq1hhuawl",
@@ -13,7 +14,7 @@ cloudinary.config({
 // Search For User
 exports.search = async (req, res, next) => {
     const { name } = req.query;
-    if(name.length < 3) return next(errorModel(400, "Atleast 3 charachters"))
+    if (name.length < 3) return next(errorModel(400, "Atleast 3 charachters"))
 
     try {
         const users = await User.find({ name: { $regex: name, $options: "i" } }, ["_id", "name", "picture"]).limit(10);
@@ -204,6 +205,35 @@ exports.deleteAccount = async (req, res, next) => {
         await User.updateMany({ followers: tokenData._id }, { $pull: { followers: tokenData._id }, $inc: { followersCount: -1 } });
         await user.deleteOne();
         res.status(200).json({ msg: "Deleted Successfuly" });
+    } catch (error) {
+        next(error);
+    }
+}
+
+// Change Pass
+exports.ChangePass = async (req, res, next) => {
+    const tokenData = req.user;
+    const { oldPass, newPass } = req.body;
+
+    if (!oldPass || !newPass) return next(errorModel(400, "All fields are required"))
+    if (newPass < 6) return next(errorModel(400, "Password must be atleast 6"));
+
+    try {
+        const user = await User.findById(tokenData._id);
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        const isValidPass = await bcrypt.compare(oldPass, user.password);
+        if (!isValidPass) return next(errorModel(401, "Old password is wrong"));
+        
+       
+        const isEqual = await bcrypt.compare(newPass, user.password);
+        if(isEqual) return next(errorModel(400, "New password and old password must be different"))
+
+        const hash = await bcrypt.hash(newPass, 10);
+        user.password = hash;
+        await user.save()
+
+        res.status(200).json({ msg: "User Password Updated" });
     } catch (error) {
         next(error);
     }
