@@ -2,6 +2,7 @@ const User = require('../models/User')
 const Post = require('../models/Post')
 const Comment = require('../models/Comment')
 const { errorModel } = require('../utils/errorModel')
+const { cloudinary } = require('../utils/uploadUserProfile')
 
 // Feed
 exports.feed = async (req, res, next) => {
@@ -23,17 +24,27 @@ exports.getSinglePost = async (req, res, next) => {
 
 // Add Post
 exports.addPost = async (req, res, next) => {
-    await User.updateMany({}, { $set: { pictureId: "" } })
+    const files = req.files;
     const tokenData = req.user;
     const { description } = req.body;
+    let media = [];
 
     try {
+        if (files) {
+            for (let file of files) {
+                const fileType = file.mimetype.split("/")[0]
+                const { secure_url, public_id } = await cloudinary.uploader.upload(file.path, { folder: "post_media", resource_type: fileType });
+                media.push({ mediaType: fileType, link: secure_url, publicId: public_id });
+            }
+        }
+
+        if (!files && !description) return next(errorModel(404, "Post Can't be empty"));
+
         const user = await User.findById(tokenData._id);
         if (!user) return next(errorModel(404, "No user found with this id"));
 
-        const post = await Post.create({ description });
+        const post = await Post.create({ description, author: user._id, media });
         return res.status(201).json(post)
-
     } catch (error) {
         next(error)
     }
