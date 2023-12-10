@@ -2,13 +2,7 @@ const User = require("../models/User");
 const { errorModel } = require("../utils/errorModel");
 const Post = require("../models/Post")
 const bcrypt = require("bcrypt");
-const cloudinary = require("cloudinary").v2;
-
-cloudinary.config({
-    cloud_name: "dq1hhuawl",
-    api_key: process.env.CLOUD_API_KEY,
-    api_secret: process.env.CLOUD_API_SECRET
-})
+const { cloudinary } = require("../utils/uploadUserProfile")
 
 
 // Search For User
