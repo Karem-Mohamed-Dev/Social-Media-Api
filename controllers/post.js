@@ -229,17 +229,55 @@ exports.unSavePost = async (req, res, next) => {
 
 // Get Users Who Likes The Post
 exports.getLikes = async (req, res, next) => {
-
+    
 }
 
 // Like Post
 exports.likePost = async (req, res, next) => {
+    const tokenData = req.user;
+    const { postId } = req.params;
 
+    try {
+        const user = await User.findById(tokenData._id, ["_id"]);
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        const post = await Post.findById(postId, ["likes", "likesCount"]);
+        if (!post) return next(errorModel(404, "Post with this id not found"));
+
+        if(post.likes.includes(user._id)) return next(errorModel(400, "Post already liked"));
+
+        post.likes.push(user._id);
+        post.likesCount += 1;
+        await post.save();
+
+        res.status(200).json({ msg: "Post Liked" })
+    } catch (error) {
+        next(error);
+    }
 }
 
 // UnLike Post
 exports.unLikePost = async (req, res, next) => {
+    const tokenData = req.user;
+    const { postId } = req.params;
 
+    try {
+        const user = await User.findById(tokenData._id, ["_id"]);
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        const post = await Post.findById(postId, ["likes", "likesCount"]);
+        if (!post) return next(errorModel(404, "Post with this id not found"));
+
+        if(!post.likes.includes(user._id)) return next(errorModel(400, "Post is not liked already"));
+
+        post.likes.pull(user._id);
+        post.likesCount -= 1;
+        await post.save();
+
+        res.status(200).json({ msg: "Post Liked" })
+    } catch (error) {
+        next(error);
+    }
 }
 
 
