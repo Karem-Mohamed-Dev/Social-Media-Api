@@ -159,7 +159,7 @@ exports.deletePost = async (req, res, next) => {
 exports.getSavedPosts = async (req, res, next) => {
     const tokenData = req.user;
     const page = +req.query.page || 1
-    const limit = 2;
+    const limit = 10;
     const skip = (page - 1) * limit;
 
     try {
@@ -309,7 +309,28 @@ exports.getComments = async (req, res, next) => {
 
 // Add Comment
 exports.addComment = async (req, res, next) => {
+    const tokenData = req.user;
+    const { postId } = req.params;
+    const { content } = req.body;
 
+    if (!content) return next(errorModel(400, "Comment cna't be empty"));
+
+    try {
+        const user = await User.findById(tokenData._id, "_id");
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        const post = await Post.findById(postId, "comments");
+        if (!post) return next(errorModel(404, "Post with this id not found"));
+
+        post.comments += 1;
+
+        const comment = await Comment.create({ content, parentId: post._id, author: user._id });
+        await post.save();
+
+        res.status(200).json(comment)
+    } catch (error) {
+        next(error);
+    }
 }
 
 // replay Comment
@@ -317,7 +338,42 @@ exports.replayComment = async (req, res, next) => {
 
 }
 
+// Like Comment
+exports.likeComment = async (req, res, next) => {
+
+}
+
+// UnLike Comment
+exports.unLikeComment = async (req, res, next) => {
+
+}
+
+
 // Delete Comment
 exports.deleteComment = async (req, res, next) => {
+    const tokenData = req.user;
+    const { commentId } = req.params;
 
+    try {
+        const user = await User.findById(tokenData._id, "_id");
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        const comment = await Comment.findById(commentId);
+        if (!comment) return next(errorModel(404, "No comment with this is found"));
+
+        if (comment.author.toString() !== user._id.toString()) return next(errorModel(401, "Not Authorized you must be the comment creator"))
+
+        const post = await Post.findById(comment.parentId, "comments");
+        if (!post) return next(errorModel(404, "Post with this id not found"));
+
+        post.comments -= 1;
+
+        await Comment.deleteMany({ parentId: comment._id });
+        await post.save();
+        await comment.deleteOne();
+
+        res.status(200).json(comment)
+    } catch (error) {
+        next(error);
+    }
 }

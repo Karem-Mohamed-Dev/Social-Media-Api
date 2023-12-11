@@ -5,7 +5,7 @@ const commentSchema = new Schema({
     parentId: { type: Schema.Types.ObjectId, required: [true, "Parent id is required"] },
     likes: { type: Number, default: 0 },
     author: { type: Schema.Types.ObjectId, ref: "User" },
-    replays: { type: Boolean, default: false }
+    replays: { type: Number, default: 0 }
 }, { timestamps: true });
 
 module.exports = model("Comment", commentSchema);
