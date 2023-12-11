@@ -106,7 +106,7 @@ exports.deletePostMedia = async (req, res, next) => {
 
         for (let i = 0; i < publidIds.length; i++) {
             if (!publidIds[i].id || !publidIds[i].fileType) continue;
-            if(!media.find(ele => ele.publicId === publidIds[i].id)) continue;
+            if (!media.find(ele => ele.publicId === publidIds[i].id)) continue;
             await cloudinary.uploader.destroy(publidIds[i].id, { resource_type: publidIds[i].fileType });
             media = media.filter(ele => ele.publicId !== publidIds[i].id);
         }
@@ -123,7 +123,27 @@ exports.deletePostMedia = async (req, res, next) => {
 
 // Delete Post
 exports.deletePost = async (req, res, next) => {
+    const tokenData = req.user;
+    const { postId } = req.params;
 
+    try {
+        const user = await User.findById(tokenData._id, ["_id"]);
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        const post = await Post.findById(postId, ["-likes", "-updatedAt", "-__v"]);
+        if (!post) return next(errorModel(404, "Post with this id not found"));
+
+        if (post.author._id.toString() !== user._id.toString()) return next(errorModel(401, "Not Authorized Must be the post creator"));
+
+        for (let media of post.media)
+            await cloudinary.uploader.destroy(media.publicId);
+
+        await post.deleteOne();
+
+        res.status(200).json({ msg: "Post Deleted" });
+    } catch (error) {
+        next(error);
+    }
 }
 
 
