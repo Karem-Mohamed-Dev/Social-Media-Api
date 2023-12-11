@@ -44,6 +44,8 @@ exports.addPost = async (req, res, next) => {
         if (!user) return next(errorModel(404, "No user found with this id"));
 
         const post = await Post.create({ description, author: user._id, media });
+        user.posts.push(post._id);
+        await user.save();
         return res.status(201).json(post)
     } catch (error) {
         next(error)
@@ -127,7 +129,7 @@ exports.deletePost = async (req, res, next) => {
     const { postId } = req.params;
 
     try {
-        const user = await User.findById(tokenData._id, ["_id"]);
+        const user = await User.findById(tokenData._id, ["_id", "posts"]);
         if (!user) return next(errorModel(404, "No user found with this id"));
 
         const post = await Post.findById(postId, ["-likes", "-updatedAt", "-__v"]);
@@ -138,7 +140,11 @@ exports.deletePost = async (req, res, next) => {
         for (let media of post.media)
             await cloudinary.uploader.destroy(media.publicId);
 
+        await User.updateMany({ saved: postId }, { $pull: { saved: postId } });
+
+        user.posts.pull(post._id);
         await post.deleteOne();
+        await user.save();
 
         res.status(200).json({ msg: "Post Deleted" });
     } catch (error) {
@@ -149,10 +155,59 @@ exports.deletePost = async (req, res, next) => {
 
 // --------------------------------------------
 
-// Save Post
-exports.savePost = async (req, res, next) => {
+// Get Saved Posts
+exports.getSavedPosts = async (req, res, next) => {
+    const tokenData = req.user;
+    const page = +req.query.page || 1
+    const limit = 2;
+    const skip = (page - 1) * limit;
+
+    try {
+        const user = await User.findById(tokenData._id)
+            .select("saved").slice("saved", [skip, limit])
+            .populate({
+                path: "saved",
+                select: ["-likes", "-updatedAt", "-__v"],
+                populate: { path: "author", select: ["_id", "name", "picture"] }
+            });
+
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        res.status(200).json(user.saved)
+    } catch (error) {
+        next(error);
+    }
 
 }
+
+// Save Post
+exports.savePost = async (req, res, next) => {
+    const tokenData = req.user;
+    const { postId } = req.params;
+
+    try {
+        const user = await User.findById(tokenData._id, ["_id", "saved"]);
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        if (user.saved.includes(postId)) return next(errorModel(400, "Post already saved"));
+
+        const post = await Post.findById(postId, ["-likes", "-updatedAt", "-__v"]);
+        if (!post) return next(errorModel(404, "Post with this id not found"));
+
+        user.saved.push(postId);
+        await user.save();
+
+        res.status(200).json({ msg: "Post Saved" })
+    } catch (error) {
+        next(error);
+    }
+}
+
+// UnSave Post
+exports.unSavePost = async (req, res, next) => {
+
+}
+
 
 // Get Users Who Likes The Post
 exports.getLikes = async (req, res, next) => {

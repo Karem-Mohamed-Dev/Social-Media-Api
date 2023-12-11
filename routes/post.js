@@ -2,7 +2,7 @@ const router = require("express").Router();
 const { isAuth } = require("../utils/isAuth");
 const { upload } = require("../utils/uploadPostMedia")
 
-const { feed, getUserPosts, getSinglePost, addPost, editPost, deletePostMedia, deletePost, savePost, getLikes, likePost, unLikePost, getComments, addComment, replayComment, deleteComment } = require("../controllers/post");
+const { feed, getUserPosts, getSinglePost, addPost, editPost, deletePostMedia, deletePost, getSavedPosts, savePost, unSavePost, getLikes, likePost, unLikePost, getComments, addComment, replayComment, deleteComment } = require("../controllers/post");
 
 router.use(isAuth);
 
@@ -36,8 +36,14 @@ router.delete('/delete/:postId', deletePost)
 // Get Users Who Likes This Post
 router.get('/likes-data', getLikes)
 
+// Get Saved Posts
+router.get('/saved', getSavedPosts)
+
 // Save Post
 router.post('/save/:postId', savePost)
+
+// UnSave Post
+router.post('/unsave/:postId', unSavePost)
 
 // Like Post
 router.post('/like/:postId', likePost)
