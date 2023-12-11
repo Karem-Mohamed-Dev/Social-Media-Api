@@ -313,7 +313,7 @@ exports.addComment = async (req, res, next) => {
     const { postId } = req.params;
     const { content } = req.body;
 
-    if (!content) return next(errorModel(400, "Comment cna't be empty"));
+    if (!content) return next(errorModel(400, "Comment can't be empty"));
 
     try {
         const user = await User.findById(tokenData._id, "_id");
@@ -335,7 +335,56 @@ exports.addComment = async (req, res, next) => {
 
 // replay Comment
 exports.replayComment = async (req, res, next) => {
+    const tokenData = req.user;
+    const { commentId } = req.params;
+    const { content } = req.body;
 
+    if (!content) return next(errorModel(400, "Comment can't be empty"));
+
+    try {
+        const user = await User.findById(tokenData._id, "_id");
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        const comment = await Comment.findById(commentId, "replays");
+        if (!comment) return next(errorModel(404, "Comment with this id not found"));
+
+        comment.replays += 1;
+
+        const replay = await Comment.create({ content, parentId: comment._id, author: user._id });
+        await comment.save();
+
+        res.status(200).json(replay);
+    } catch (error) {
+        next(error);
+    }
+}
+
+// Delete replay
+exports.deleteReplay = async (req, res, next) => {
+    const tokenData = req.user;
+    const { commentId } = req.params;
+
+    try {
+        const user = await User.findById(tokenData._id, "_id");
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        const comment = await Comment.findById(commentId, ["parentId", "replays", "author"]);
+        if (!comment) return next(errorModel(404, "Comment with this id not found"));
+
+        if (user._id.toString() !== comment.author.toString()) return next(errorModel(401, "Not Authorized Must be the Comment creator"));
+
+        const parentComment = await Comment.findById(comment.parentId, "replays");
+        if (!parentComment) return next(errorModel(404, "Comment with this id not found"));
+        parentComment.replays -= 1;
+
+        await parentComment.save();
+        if (comment.replays > 0) await Comment.deleteMany({ parentId: comment._id });
+        await comment.deleteOne();
+
+        res.status(200).json({ msg: "Replay Deleted" });
+    } catch (error) {
+        next(error);
+    }
 }
 
 // Like Comment
@@ -368,11 +417,11 @@ exports.deleteComment = async (req, res, next) => {
 
         post.comments -= 1;
 
-        await Comment.deleteMany({ parentId: comment._id });
+        if (comment.replays > 0) await Comment.deleteMany({ parentId: comment._id });
         await post.save();
         await comment.deleteOne();
 
-        res.status(200).json(comment)
+        res.status(200).json({ msg: "Comment Deleted" })
     } catch (error) {
         next(error);
     }
