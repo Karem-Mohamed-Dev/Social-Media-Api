@@ -205,7 +205,25 @@ exports.savePost = async (req, res, next) => {
 
 // UnSave Post
 exports.unSavePost = async (req, res, next) => {
+    const tokenData = req.user;
+    const { postId } = req.params;
 
+    try {
+        const user = await User.findById(tokenData._id, ["_id", "saved"]);
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        if (!user.saved.includes(postId)) return next(errorModel(400, "Post is not saved already"));
+
+        const post = await Post.findById(postId, ["-likes", "-updatedAt", "-__v"]);
+        if (!post) return next(errorModel(404, "Post with this id not found"));
+
+        user.saved.pull(postId);
+        await user.save();
+
+        res.status(200).json({ msg: "Post UnSaved" })
+    } catch (error) {
+        next(error);
+    }
 }
 
 
