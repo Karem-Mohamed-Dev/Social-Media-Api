@@ -34,7 +34,7 @@ router.delete('/delete/:postId', deletePost)
 // --------------------------------------------
 
 // Get Users Who Likes This Post
-router.get('/likes-data', getLikes)
+router.get('/likes-data/:postId', getLikes)
 
 // Get Saved Posts
 router.get('/saved', getSavedPosts)
