@@ -3,8 +3,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { errorModel } = require("../utils/errorModel")
 const { isEmail } = require("validator");
-const sendEmail = require('../utils/sendEmail')
-const { v4: uuidv4 } = require("uuid");
+const sendEmail = require('../utils/sendEmail');
+const crypto = require("crypto");
 
 const CreateToken = (_id, name) => {
     const token = jwt.sign({ _id, name }, process.env.SECRET, { expiresIn: "3d" });
@@ -65,16 +65,25 @@ exports.register = async (req, res, next) => {
 exports.getCode = async (req, res, next) => {
     const { email } = req.body;
 
+    const generateCode = () => {
+        let code = "";
+        for (let i = 0; i < 6; i++)
+            code += Math.floor(Math.random() * 10);
+        return code;
+    }
+
     try {
         const user = await User.findOne({ email });
         if (!user) return next(errorModel(404, "User not found"));
-        user.resetPassCode = uuidv4();
+        user.resetPass.code = generateCode();
+        const expireDate = Date.now() + (60 * 60 * 1000);
+        user.resetPass.expire = expireDate;
         await user.save();
 
         await sendEmail(email, "Reset Password", `
             <div>
                 <h1 style="text-align: center; font-size: 2rem'">Code to reset password</h1>
-                <p style="background-color: #EDEBD7; padding: 10px; border-radius: 4px width: fit-content">${user.resetPassCode}</p>
+                <p style="letter-spacing: 0.5rem; font-size: 1rem; font-weight: 500">${user.resetPass.code}</p>
             </div>
         `);
         res.status(200).json({ msg: `Email Sent To: ${email}` });
@@ -86,10 +95,39 @@ exports.getCode = async (req, res, next) => {
 
 // Verify Code
 exports.verifyCode = async (req, res, next) => {
+    const { email, code } = req.body;
 
+    try {
+        const user = await User.findOne({ email });
+        if (!user) return next(errorModel(404, "User not found"));
+
+        if(user.resetPass.code !== code) return next(errorModel(404, "Wrong Code"));
+        if(user.resetPass.expire < Date.now()) return next(errorModel(404, "Code Expired"));
+
+        const token = jwt.sign({code: user.resetPass.code, _id: user._id}, process.env.SECRET, {expiresIn: '10m'});
+        await user.save();
+
+        res.status(200).json({ token });
+    } catch (error) { next(error) }
 }
 
 // Set New Code
 exports.setNewPass = async (req, res, next) => {
+    const { token, newPassword } = req.body;
 
+    try {
+        const encoded = jwt.verify(token, process.env.SECRET);
+        console.log(encoded)
+        const user = await User.findById(encoded._id);
+        if (!user) return next(errorModel(404, "User not found"));
+
+        if(user.resetPass.code !== encoded.code) return next(errorModel(404, "Wrong Code"));
+        if(user.resetPass.expire < Date.now()) return next(errorModel(404, "Code Expired"));
+        
+        const hash = await bcrypt.hash(newPassword, 10);
+        user.password = hash;
+        await user.save();
+
+        res.status(200).json({ msg: "Succes" });
+    } catch (error) { next(error) }
 }

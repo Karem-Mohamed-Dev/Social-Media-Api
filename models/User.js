@@ -18,7 +18,7 @@ const userSchema = new Schema({
         required: [true, "Password is required"],
         minlength: [6, "Password can't be less than 6"],
     },
-    resetPassCode: {type: String, default: null},
+    resetPass: { code: { type: String, default: null }, expire: { type: Date, default: null } },
     bio: { type: String, default: "" },
     posts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
     saved: [{ type: Schema.Types.ObjectId, ref: "Post" }],
