@@ -56,7 +56,7 @@ router.post('/unlike/:postId', unLikePost)
 
 
 // Get Comments
-router.get('/comments', getComments);
+router.get('/comments/:postId', getComments);
 
 // Add Comment
 router.post('/comment/create/:postId', addComment)

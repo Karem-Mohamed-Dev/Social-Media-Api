@@ -6,17 +6,40 @@ const { cloudinary } = require('../utils/uploadUserProfile')
 
 // Feed
 exports.feed = async (req, res, next) => {
-
+    
 }
 
 // Get User Posts
 exports.getUserPosts = async (req, res, next) => {
+    const { userId } = req.params;
 
+    try {
+        const user = await User.findById(userId, "posts")
+            .populate({
+                path: "posts",
+                select: ["-likes", "-updatedAt", "-__v"],
+                populate: { path: "author", select: ["_id", "name", "picture"] }
+            });
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        res.status(200).json(user.posts);
+    } catch (error) {
+        next(error);
+    }
 }
 
 // Get Post
 exports.getSinglePost = async (req, res, next) => {
+    const { postId } = req.params;
 
+    try {
+        const post = await Post.findById(postId, ["-likes", "-updatedAt", "-__v"]);
+        if (!post) return next(errorModel(404, "Post with this id not found"));
+
+        res.status(200).json(post);
+    } catch (error) {
+        next(error);
+    }
 }
 
 
@@ -304,6 +327,26 @@ exports.unLikePost = async (req, res, next) => {
 
 // Get Comments
 exports.getComments = async (req, res, next) => {
+    const tokenData = req.user;
+    const { postId } = req.params;
+    const page = +req.query.page || 1;
+    const limit = 2;
+    const skip = (page - 1) * limit;
+
+    try {
+        const user = await User.findById(tokenData._id, "_id");
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        const post = await Post.findById(postId, "comments");
+        if (!post) return next(errorModel(404, "Post with this id not found"));
+
+        const comments = await Comment.find({ parentId: post._id }, ["-likesArr", "-updatedAt", "-__v"])
+            .skip(skip).limit(limit);
+
+        res.status(200).json(comments);
+    } catch (error) {
+        next(error);
+    }
 
 }
 
