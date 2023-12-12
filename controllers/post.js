@@ -74,7 +74,6 @@ exports.getSinglePost = async (req, res, next) => {
     }
 }
 
-
 // --------------------------------------------
 
 // Add Post
@@ -207,7 +206,6 @@ exports.deletePost = async (req, res, next) => {
     }
 }
 
-
 // --------------------------------------------
 
 // Get Saved Posts
@@ -281,7 +279,6 @@ exports.unSavePost = async (req, res, next) => {
     }
 }
 
-
 // Get Users Who Likes The Post
 exports.getLikes = async (req, res, next) => {
     const tokenData = req.user;
@@ -353,9 +350,7 @@ exports.unLikePost = async (req, res, next) => {
     }
 }
 
-
 // --------------------------------------------
-
 
 // Get Comments
 exports.getComments = async (req, res, next) => {
@@ -509,7 +504,6 @@ exports.unLikeComment = async (req, res, next) => {
         next(error);
     }
 }
-
 
 // Delete Comment
 exports.deleteComment = async (req, res, next) => {

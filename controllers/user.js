@@ -4,7 +4,6 @@ const Post = require("../models/Post")
 const bcrypt = require("bcrypt");
 const { cloudinary } = require("../utils/uploadUserProfile")
 
-
 // Search For User
 exports.search = async (req, res, next) => {
     const { name } = req.query;

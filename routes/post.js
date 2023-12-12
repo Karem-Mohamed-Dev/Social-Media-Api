@@ -15,7 +15,6 @@ router.get('/user/:userId', getUserPosts)
 // Get Post
 router.get('/single/:postId', getSinglePost)
 
-
 // --------------------------------------------
 
 // Add Post
@@ -29,7 +28,6 @@ router.delete('/delete-media/:postId', deletePostMedia)
 
 // Delete Post
 router.delete('/delete/:postId', deletePost)
-
 
 // --------------------------------------------
 
@@ -51,9 +49,7 @@ router.post('/like/:postId', likePost)
 // UnLike Post
 router.post('/unlike/:postId', unLikePost)
 
-
 // --------------------------------------------
-
 
 // Get Comments
 router.get('/comments/:postId', getComments);
@@ -75,9 +71,5 @@ router.post('/comment/unlike/:commentId', unLikeComment)
 
 // Delete Comment
 router.delete('/comment/:commentId', deleteComment)
-
-
-module.exports = router;
-
 
 module.exports = router;

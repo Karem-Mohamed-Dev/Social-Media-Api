@@ -24,5 +24,4 @@ module.exports = async (email, subject, html) => {
         else
             return true;
     })
-
 }

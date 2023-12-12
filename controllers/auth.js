@@ -61,7 +61,6 @@ exports.register = async (req, res, next) => {
     }
 }
 
-
 // Get Code
 exports.getCode = async (req, res, next) => {
     const { email } = req.body;

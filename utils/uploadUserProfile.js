@@ -17,12 +17,8 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
     if (file.mimetype.startsWith('image/'))
         cb(null, true);
-    else
-        cb(errorModel(400, "File type not supported"));
-
+    else cb(errorModel(400, "File type not supported"));
 }
 
-
 const upload = multer({ storage, fileFilter, limits: { fileSize: 1024 * 1024 * 2 } });
-
 module.exports = { cloudinary, upload }
