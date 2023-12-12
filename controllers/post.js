@@ -389,12 +389,50 @@ exports.deleteReplay = async (req, res, next) => {
 
 // Like Comment
 exports.likeComment = async (req, res, next) => {
+    const tokenData = req.user;
+    const { commentId } = req.params;
 
+    try {
+        const user = await User.findById(tokenData._id, "_id");
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        const comment = await Comment.findById(commentId, ["likes", "likesArr"]);
+        if (!comment) return next(errorModel(404, "Comment with this id not found"));
+
+        if (comment.likesArr.includes(user._id)) return next(errorModel(400, "You already liked it"));
+
+        comment.likesArr.push(user._id);
+        comment.likes += 1;
+        await comment.save();
+
+        res.status(200).json({ msg: "Comment Liked" });
+    } catch (error) {
+        next(error);
+    }
 }
 
 // UnLike Comment
 exports.unLikeComment = async (req, res, next) => {
+    const tokenData = req.user;
+    const { commentId } = req.params;
 
+    try {
+        const user = await User.findById(tokenData._id, "_id");
+        if (!user) return next(errorModel(404, "No user found with this id"));
+
+        const comment = await Comment.findById(commentId, ["likes", "likesArr"]);
+        if (!comment) return next(errorModel(404, "Comment with this id not found"));
+
+        if (!comment.likesArr.includes(user._id)) return next(errorModel(400, "You didn't like it already"));
+
+        comment.likesArr.pull(user._id);
+        comment.likes -= 1;
+        await comment.save();
+
+        res.status(200).json({ msg: "Comment UnLiked" });
+    } catch (error) {
+        next(error);
+    }
 }
 
 
