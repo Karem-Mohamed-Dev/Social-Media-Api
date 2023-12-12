@@ -6,7 +6,39 @@ const { cloudinary } = require('../utils/uploadUserProfile')
 
 // Feed
 exports.feed = async (req, res, next) => {
-    
+    const tokenData = req.user;
+    const page = +req.query.page || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    try {
+        const user = await User.findById(tokenData._id, "followings");
+        if (!user) return next(errorModel(404, "No user found with this id"));
+        const followingsIds = user.followings;
+        let posts = [];
+
+        if (followingsIds.length > 0) {
+            posts = await Post.find({ author: { $in: followingsIds } }, ["-likes", "-createdAt", "-updatedAt", "-__v"])
+                .sort({ createdAt: -1 })
+                .skip(skip).limit(limit)
+                .populate("author", ["_id", "name", "picture"])
+        }
+
+        const remainingLimit = limit - posts.length;
+        if (remainingLimit !== 0) {
+            const random = await Post.find({}, ["-likes", "-createdAt", "-updatedAt", "-__v"])
+                .sort({ createdAt: -1 })
+                .skip(skip).limit(remainingLimit)
+                .populate("author", ["_id", "name", "picture"])
+
+            if (remainingLimit === limit) posts = random;
+            else posts.push(...random)
+        }
+        res.status(200).json(posts)
+    } catch (error) {
+        next(error);
+    }
+
 }
 
 // Get User Posts
