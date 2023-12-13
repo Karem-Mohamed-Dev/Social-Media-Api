@@ -10,10 +10,10 @@ router.get('/profile/:userId', getUser);
 router.get('/search', search);
 
 // Get User Followers
-router.get("/followers/:userId", getFollowers)
+router.get("/:userId/followers", getFollowers)
 
 // Get User Followers
-router.get("/followings/:userId", getFollowings)
+router.get("/:userId/followings", getFollowings)
 
 // ---------------------------------------------------------------------
 
