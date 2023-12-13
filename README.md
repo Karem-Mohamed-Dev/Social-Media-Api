@@ -96,15 +96,15 @@ This API provides endpoints for accessing social media functionalities, includin
 ### Sample Requests
 ```javascript
 // Retrieve all users
-fetch('https://example.com/api/users')
+fetch('https://example.com/api/auth/login')
   .then(response => response.json())
   .then(data => console.log(data));
 ```
 
-Error Handling
-400 Bad Request: Invalid request format.
-401 Unauthorized: Authentication failure.
-404 Not Found: Resource not found.
+### Error Handling
+- `400` Bad Request: Invalid request format.
+- `401` Unauthorized: Authentication failure.
+- `404` Not Found: Resource not found.
 
 ## License
 
