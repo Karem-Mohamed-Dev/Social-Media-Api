@@ -10,10 +10,10 @@ router.get('/profile/:userId', getUser);
 router.get('/search', search);
 
 // Get User Followers
-router.get("/:userId/followers", getFollowers)
+router.get("/followers/:userId", getFollowers)
 
 // Get User Followers
-router.get("/:userId/followings", getFollowings)
+router.get("/followings/:userId", getFollowings)
 
 // ---------------------------------------------------------------------
 
@@ -29,10 +29,10 @@ router.post("/follow/:userId", follow);
 // follow 
 router.post("/unfollow/:userId", unfollow);
 
-// Delete Profile
-router.delete("/delete", deleteAccount);
-
 // Change Password
 router.put("/change-pass", ChangePass)
+
+// Delete Profile
+router.delete("/", deleteAccount);
 
 module.exports = router;

@@ -17,7 +17,6 @@ exports.search = async (req, res, next) => {
 // Get Profile
 exports.getUser = async (req, res, next) => {
     const { userId } = req.params;
-    if (!userId) return next(errorModel(400, "All fields are required"));
 
     const userFilter = ["_id", "name", "email", "bio", "picture", "followersCount", "followingsCount"];
 
@@ -63,8 +62,6 @@ exports.updateUser = async (req, res, next) => {
 exports.follow = async (req, res, next) => {
     const tokenData = req.user;
     const { userId } = req.params;
-
-    if (!userId) next(errorModel(400, "User id is required"));
     if (tokenData._id === userId) return next(errorModel(400, "You Can't follow yourself"));
 
     try {
@@ -93,8 +90,6 @@ exports.follow = async (req, res, next) => {
 exports.unfollow = async (req, res, next) => {
     const tokenData = req.user;
     const { userId } = req.params;
-
-    if (!userId) next(errorModel(400, "User id is required"));
     if (tokenData._id === userId) return next(errorModel(400, "You Can't Unfollow yourself"));
 
     try {
@@ -121,8 +116,6 @@ exports.unfollow = async (req, res, next) => {
 // Get Followers
 exports.getFollowers = async (req, res, next) => {
     const { userId } = req.params;
-    if (!userId) return next(errorModel(400, "All fields are required"));
-
     const group = +req.query.group || 1;
     const limit = 10;
     const skip = (group - 1) * limit;
@@ -140,8 +133,6 @@ exports.getFollowers = async (req, res, next) => {
 // Get Followings
 exports.getFollowings = async (req, res, next) => {
     const { userId } = req.params;
-    if (!userId) return next(errorModel(400, "All fields are required"));
-
     const group = +req.query.group || 1;
     const limit = 10;
     const skip = (group - 1) * limit;
