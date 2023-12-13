@@ -24,10 +24,10 @@ router.use(isAuth)
 router.put("/update", upload.single('image'), updateUser);
 
 // follow 
-router.post("/follow", follow);
+router.post("/follow/:userId", follow);
 
 // follow 
-router.post("/unfollow", unfollow);
+router.post("/unfollow/:userId", unfollow);
 
 // Delete Profile
 router.delete("/delete", deleteAccount);

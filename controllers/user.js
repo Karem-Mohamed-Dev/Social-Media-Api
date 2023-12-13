@@ -62,7 +62,7 @@ exports.updateUser = async (req, res, next) => {
 // Follow 
 exports.follow = async (req, res, next) => {
     const tokenData = req.user;
-    const { userId } = req.body;
+    const { userId } = req.params;
 
     if (!userId) next(errorModel(400, "User id is required"));
     if (tokenData._id === userId) return next(errorModel(400, "You Can't follow yourself"));
@@ -92,7 +92,7 @@ exports.follow = async (req, res, next) => {
 // UnFollow 
 exports.unfollow = async (req, res, next) => {
     const tokenData = req.user;
-    const { userId } = req.body;
+    const { userId } = req.params;
 
     if (!userId) next(errorModel(400, "User id is required"));
     if (tokenData._id === userId) return next(errorModel(400, "You Can't Unfollow yourself"));
