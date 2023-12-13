@@ -99,6 +99,8 @@ This API provides endpoints for accessing social media functionalities, includin
 fetch('https://example.com/api/users')
   .then(response => response.json())
   .then(data => console.log(data));
+```
+
 Error Handling
 400 Bad Request: Invalid request format.
 401 Unauthorized: Authentication failure.
