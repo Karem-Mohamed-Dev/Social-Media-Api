@@ -1,6 +1,5 @@
 const User = require("../models/User");
 const { errorModel } = require("../utils/errorModel");
-const Post = require("../models/Post")
 const bcrypt = require("bcrypt");
 const { cloudinary } = require("../utils/uploadUserProfile")
 
@@ -12,15 +11,14 @@ exports.search = async (req, res, next) => {
     try {
         const users = await User.find({ name: { $regex: name, $options: "i" } }, ["_id", "name", "picture"]).limit(10);
         res.status(200).json(users);
-
-    } catch (error) {
-        next(error);
-    }
+    } catch (error) { next(error) }
 }
 
 // Get Profile
 exports.getUser = async (req, res, next) => {
     const { userId } = req.params;
+    if (!userId) return next(errorModel(400, "All fields are required"));
+
     const userFilter = ["_id", "name", "email", "bio", "picture", "followersCount", "followingsCount"];
 
     try {
@@ -28,45 +26,36 @@ exports.getUser = async (req, res, next) => {
         if (!user) return next(errorModel(404, "User not found"));
 
         res.status(200).json(user);
-    } catch (error) {
-        next(error);
-    }
+    } catch (error) { next(error) }
 }
 
 // Update Profile
 exports.updateUser = async (req, res, next) => {
-    const userFilter = ["_id", "name", "email", "bio", "picture", "pictureId"];
-
     const { name, email, bio } = req.body;
+    if (!name || !email || !bio) return next(errorModel(400, "All fields are required"));
+
+    const userFilter = ["_id", "name", "email", "bio", "picture", "pictureId"];
     const tokenData = req.user;
     const picture = req.file ? req.file.path : null;
-    let imageUrl = null;
-    let imageId = "";
 
     try {
         const user = await User.findById(tokenData._id, userFilter);
         if (!user) return next(errorModel(404, "User not found"));
-        
+
         if (picture) {
-            if (user.pictureId)  await cloudinary.uploader.destroy(user.pictureId)
+            if (user.pictureId) await cloudinary.uploader.destroy(user.pictureId)
             const result = await cloudinary.uploader.upload(picture, { folder: "user_picture" });
-            console.log(result)
-            imageUrl = result.secure_url;
-            imageId = result.public_id
+            user.picture = result.secure_url;
+            user.pictureId = result.public_id
         }
 
         user.name = name || user.name;
         user.email = email || user.email;
-        user.picture = imageUrl || user.picture;
-        user.pictureId = imageId || user.pictureId;
         user.bio = bio || user.bio;
-
         const updatedUser = await user.save();
 
         res.status(200).json(updatedUser);
-    } catch (error) {
-        next(error);
-    }
+    } catch (error) { next(error) }
 
 }
 
@@ -74,8 +63,8 @@ exports.updateUser = async (req, res, next) => {
 exports.follow = async (req, res, next) => {
     const tokenData = req.user;
     const { userId } = req.body;
-    if (!userId) next(errorModel(400, "User id is required"));
 
+    if (!userId) next(errorModel(400, "User id is required"));
     if (tokenData._id === userId) return next(errorModel(400, "You Can't follow yourself"));
 
     try {
@@ -85,7 +74,7 @@ exports.follow = async (req, res, next) => {
         const targetUser = await User.findById(userId);
         if (!targetUser) return next(errorModel(404, "Nor Target User found with this id"));
 
-        if (currentUser.followings.includes(userId)) return next(errorModel(400, "You already following him"))
+        if (currentUser.followings.includes(userId)) return next(errorModel(400, "You already following him"));
 
         currentUser.followings.push(userId);
         targetUser.followers.push(tokenData._id);
@@ -97,18 +86,15 @@ exports.follow = async (req, res, next) => {
         await targetUser.save();
 
         res.status(200).json({ msg: "Followed Successfuly" });
-
-    } catch (error) {
-        next(error);
-    }
+    } catch (error) { next(error) }
 }
 
 // UnFollow 
 exports.unfollow = async (req, res, next) => {
     const tokenData = req.user;
     const { userId } = req.body;
-    if (!userId) next(errorModel(400, "User id is required"));
 
+    if (!userId) next(errorModel(400, "User id is required"));
     if (tokenData._id === userId) return next(errorModel(400, "You Can't Unfollow yourself"));
 
     try {
@@ -116,9 +102,8 @@ exports.unfollow = async (req, res, next) => {
         if (!currentUser) return next(errorModel(404, "No Current User found with this id"));
 
         const targetUser = await User.findById(userId);
-        // if (!targetUser) return next(errorModel(404, "Nor Target User found with this id"));
 
-        if (!currentUser.followings.includes(userId)) return next(errorModel(400, "You aren't following him already"))
+        if (!currentUser.followings.includes(userId)) return next(errorModel(400, "You aren't following him already"));
 
         currentUser.followings.pull(userId);
         if (targetUser) targetUser.followers.pull(tokenData._id);
@@ -130,15 +115,14 @@ exports.unfollow = async (req, res, next) => {
         if (targetUser) await targetUser.save();
 
         res.status(200).json({ msg: "UnFollowed Successfuly" });
-
-    } catch (error) {
-        next(error);
-    }
+    } catch (error) { next(error) }
 }
 
 // Get Followers
 exports.getFollowers = async (req, res, next) => {
-    const { userId } = req.params
+    const { userId } = req.params;
+    if (!userId) return next(errorModel(400, "All fields are required"));
+
     const group = +req.query.group || 1;
     const limit = 10;
 
@@ -148,16 +132,15 @@ exports.getFollowers = async (req, res, next) => {
             .slice("followers", [(group - 1) * limit, limit])
             .populate("followers", ["_id", "name", "picture"]);
 
-        res.status(200).json(user.followers)
-
-    } catch (error) {
-        next(error);
-    }
+        res.status(200).json(user.followers);
+    } catch (error) { next(error) }
 }
 
 // Get Followings
 exports.getFollowings = async (req, res, next) => {
-    const { userId } = req.params
+    const { userId } = req.params;
+    if (!userId) return next(errorModel(400, "All fields are required"));
+
     const group = +req.query.group || 1;
     const limit = 10;
 
@@ -167,11 +150,8 @@ exports.getFollowings = async (req, res, next) => {
             .slice("followings", [(group - 1) * limit, limit])
             .populate("followings", ["_id", "name", "picture"]);
 
-        res.status(200).json(user.followings)
-
-    } catch (error) {
-        next(error);
-    }
+        res.status(200).json(user.followings);
+    } catch (error) { next(error) }
 }
 
 // Delete Profile
@@ -181,12 +161,12 @@ exports.deleteAccount = async (req, res, next) => {
     try {
         const user = await User.findById(tokenData._id);
         if (!user) return next(errorModel(404, "User with id not found"));
+
         await User.updateMany({ followers: tokenData._id }, { $pull: { followers: tokenData._id }, $inc: { followersCount: -1 } });
         await user.deleteOne();
+
         res.status(200).json({ msg: "Deleted Successfuly" });
-    } catch (error) {
-        next(error);
-    }
+    } catch (error) { next(error) }
 }
 
 // Change Pass
