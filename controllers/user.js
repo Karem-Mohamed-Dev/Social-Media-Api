@@ -32,7 +32,7 @@ exports.getUser = async (req, res, next) => {
 // Update Profile
 exports.updateUser = async (req, res, next) => {
     const { name, email, bio } = req.body;
-    if (!name || !email || !bio) return next(errorModel(400, "All fields are required"));
+    if (!name && !email && !bio) return next(errorModel(400, "Provide atleast one field"));
 
     const userFilter = ["_id", "name", "email", "bio", "picture", "pictureId"];
     const tokenData = req.user;
