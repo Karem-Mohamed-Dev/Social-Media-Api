@@ -6,7 +6,7 @@ const { cloudinary } = require("../utils/uploadUserProfile")
 // Search For User
 exports.search = async (req, res, next) => {
     const { name } = req.query;
-    if (name.length < 3) return next(errorModel(400, "Atleast 3 charachters"))
+    if (name.length < 3) return next(errorModel(400, "Atleast 3 charachters"));
 
     try {
         const users = await User.find({ name: { $regex: name, $options: "i" } }, ["_id", "name", "picture"]).limit(10);
@@ -125,11 +125,12 @@ exports.getFollowers = async (req, res, next) => {
 
     const group = +req.query.group || 1;
     const limit = 10;
+    const skip = (group - 1) * limit;
 
     try {
         const user = await User.findById(userId)
             .select("followers")
-            .slice("followers", [(group - 1) * limit, limit])
+            .slice("followers", [skip, limit])
             .populate("followers", ["_id", "name", "picture"]);
 
         res.status(200).json(user.followers);
@@ -143,11 +144,11 @@ exports.getFollowings = async (req, res, next) => {
 
     const group = +req.query.group || 1;
     const limit = 10;
+    const skip = (group - 1) * limit;
 
     try {
-        const user = await User.findById(userId)
-            .select("followings")
-            .slice("followings", [(group - 1) * limit, limit])
+        const user = await User.findById(userId, "followings")
+            .slice("followings", [skip, limit])
             .populate("followings", ["_id", "name", "picture"]);
 
         res.status(200).json(user.followings);
@@ -190,10 +191,8 @@ exports.ChangePass = async (req, res, next) => {
 
         const hash = await bcrypt.hash(newPass, 10);
         user.password = hash;
-        await user.save()
+        await user.save();
 
         res.status(200).json({ msg: "User Password Updated" });
-    } catch (error) {
-        next(error);
-    }
+    } catch (error) { next(error) }
 }
